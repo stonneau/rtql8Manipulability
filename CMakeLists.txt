@@ -30,6 +30,7 @@ FILE(APPEND ${PATH_HEADER_DIR} "#endif // ifndef MANIPULABILITY_PATHS_H\n")
 
 ###############################################
 
+add_subdirectory (src/rtql8Manipulability/)
 add_subdirectory (src/tests/)
-# add_subdirectory (src/rtql8Manipulability/)
+
 
