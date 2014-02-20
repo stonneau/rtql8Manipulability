@@ -15,6 +15,14 @@
 *.lib
 *.pdb
 
+# Build and Release Folders
+bin/
+lib/
+build/*
+
+# temp files
+.*~
+
 CMakeCache.txt
 CMakeFiles
 Makefile
