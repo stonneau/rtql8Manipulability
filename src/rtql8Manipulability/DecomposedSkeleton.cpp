@@ -6,16 +6,22 @@ using namespace rtql8::kinematics;
 
 namespace
 {
-	void DecomposeRec(BodyNode* node, DecomposedSkeleton::T_BodyNodePtr& limbs)
+	bool IsSimple(BodyNode* node)
 	{
 		int nbChilds = node->getNumChildJoints();
-		if(nbChilds < 2)
+		if(nbChilds==0) return true;
+		return (nbChilds<2) ? IsSimple(node->getChildNode(0)) : false ;
+	}
+
+	void DecomposeRec(BodyNode* node, DecomposedSkeleton::T_BodyNodePtr& limbs)
+	{
+		if(IsSimple(node))
 		{
 			limbs.push_back(node);
 		}
 		else
 		{
-			for(int i=0; i<nbChilds; ++i)
+			for(int i=0; i<node->getNumChildJoints(); ++i)
 			{
 				DecomposeRec(node->getChildNode(i), limbs);
 			}

@@ -7,11 +7,27 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/")
 set(RTQL8_INCLUDE_DIR "default value" CACHE PATH "include folder for RTQL8")
 set(RTQL8_LIBRARY_DIR "default value" CACHE PATH "library folder for RTQL8")
 
+set(RTQL8_THIRD_PART_LIBRARY_DIR "default value" CACHE PATH "library folder for RTQL8")
+
+
+###############################################
+# Find important packages
+FIND_PACKAGE(OpenGL REQUIRED)
+IF (OPENGL_FOUND)
+MESSAGE(STATUS "OPENGL FOUND")
+#MESSAGE(${OPENGL_LIBRARIES})
+ELSE (OPENGL_FOUND)
+MESSAGE(STATUS "OPENGL NOT FOUND")
+ENDIF ()
+
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
-include_directories(${RTQL8_INCLUDE_DIR})
 
+
+include_directories(${RTQL8_INCLUDE_DIR})
 link_directories(${RTQL8_LIBRARY_DIR})
+link_directories(${RTQL8_THIRD_PART_LIBRARY_DIR})
+
 
 ###############################################
 # Generate the path header file

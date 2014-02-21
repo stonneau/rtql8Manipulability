@@ -13,6 +13,7 @@ class DecomposedSkeleton {
 
 public:
 	typedef std::vector<BodyNode*> T_BodyNodePtr;
+	typedef T_BodyNodePtr::const_iterator CIT_BodyNodePtr;
 
 public:
 	 DecomposedSkeleton(Skeleton* /*skeleton*/);
