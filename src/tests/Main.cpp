@@ -38,19 +38,19 @@
 
 #include <iostream>
 
-#include "kinematics/Skeleton.h"
-#include "dynamics/SkeletonDynamics.h"
-#include "kinematics/BodyNode.h"
-#include "kinematics/FileInfoSkel.hpp"
-#include "simulation/World.h"
+#include "rtql8/kinematics/Skeleton.h"
+#include "rtql8/dynamics/SkeletonDynamics.h"
+#include "rtql8/kinematics/BodyNode.h"
+#include "rtql8/kinematics/FileInfoSkel.hpp"
+#include "rtql8/simulation/World.h"
 
 #include "rtql8Manipulability/DecomposedSkeleton.h"
 #include "rtql8Manipulability/sampling/Sample.h"
 
-#include "utils/Paths.h"
+#include "rtql8/utils/Paths.h"
 #include "manipulability/ManipulabilityPaths.h"
 #include "manipulability/ManipulabilityPaths.h"
-#include "utils/UtilsMath.h"
+#include "rtql8/utils/UtilsMath.h"
 
 #include "MyWindow.h"
 

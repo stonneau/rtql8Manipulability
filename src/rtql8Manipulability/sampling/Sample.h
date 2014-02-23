@@ -20,7 +20,7 @@ public:
 	~Sample();
 
 private:
-	Sample& Sample::operator =(const Sample&);
+	Sample& operator =(const Sample&);
 	/*Sample(const Sample&);*/
 
 public:
