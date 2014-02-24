@@ -16,7 +16,7 @@ public:
 	typedef T_Angles::const_iterator CIT_Angles;
 
 public:
-	Sample(BodyNode* /*root*/);
+	Sample(BodyNode* /*root*/, bool randomize=false); // if randomize random values are created for sample instead of current dofs
 	~Sample();
 
 private:

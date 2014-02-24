@@ -24,16 +24,26 @@ namespace
 			effector = effector->getChildNode(0);
 		}
 		Vector3 zero(0,0,0);
-		return effector->evalWorldPos(zero) - node->evalWorldPos(zero) ;
+		return effector->evalWorldPos(zero) - node->evalWorldPos(zero);
 	}
 
-	void CollectAnglesRec(BodyNode* node, Sample::T_Angles& angles)
+	void CollectAnglesRec(BodyNode* node, Sample::T_Angles& angles, bool randomize)
 	{
 		for(int i=0; i<node->getNumLocalDofs(); ++i)
 		{
 			if(node->getDof(i)->getJoint()->getJointType() != Joint::J_TRANS)
 			{
-				angles.push_back(node->getDof(i)->getValue());
+				if(randomize)
+				{
+					angles.push_back(node->getDof(i)->getValue());
+				}
+				else
+				{
+					double minTheta, maxTheta;
+					minTheta = node->getDof(i)->getMin();
+					maxTheta = node->getDof(i)->getMax();
+					angles.push_back(rand() / (maxTheta-minTheta + 1) + minTheta);
+				}
 			}
 			else
 			{
@@ -44,20 +54,20 @@ namespace
 		assert(nbChilds <2); // if this is false this means we don't have a simple limb
 		if(nbChilds>0)
 		{
-			CollectAnglesRec(node->getChildNode(0), angles);
+			CollectAnglesRec(node->getChildNode(0), angles, randomize);
 		}
 	}
 
-	Sample::T_Angles CollectAngles(BodyNode* limbRoot)
+	Sample::T_Angles CollectAngles(BodyNode* limbRoot, bool randomize)
 	{
 		Sample::T_Angles angles;
-		CollectAnglesRec(limbRoot, angles);
+		CollectAnglesRec(limbRoot, angles, randomize);
 		return angles;
 	}
 }
 
-Sample::Sample(BodyNode* limbRoot)
-	: angles_(CollectAngles(limbRoot))
+Sample::Sample(BodyNode* limbRoot, bool randomize)
+	: angles_(CollectAngles(limbRoot, randomize))
 	, position_(ComputeEffectorPositioon(limbRoot))
 {
 	// Jacobian computation

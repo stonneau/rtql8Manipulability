@@ -8,6 +8,8 @@ include_directories("${CMAKE_BINARY_DIR}/lib")
 set(SOURCES 
 	DecomposedSkeleton.h DecomposedSkeleton.cpp
 		sampling/Sample.h sampling/Sample.cpp
+		sampling/SampleGenerator.h sampling/SampleGenerator.cpp
+		sampling/SampleGeneratorVisitor_ABC.h sampling/SampleGeneratorVisitor_ABC.cpp
 		${RTQL8_MANIPULABILITY_ROOT}/src/utils/MatrixDefsInternal.h
 		${RTQL8_MANIPULABILITY_ROOT}/src/utils/MatrixDefs.h
 		${RTQL8_MANIPULABILITY_ROOT}/src/utils/MatrixDefs.cpp
