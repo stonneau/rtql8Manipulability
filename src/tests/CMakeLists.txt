@@ -20,6 +20,7 @@ TARGET_LINK_LIBRARIES(manipulabilityTests
 						kinematics
 						collision
 						simulation
+						geometry
 						dynamics
 						lcpsolver
 						integration

@@ -43,6 +43,7 @@
 #include "rtql8/kinematics/BodyNode.h"
 #include "rtql8/kinematics/FileInfoSkel.hpp"
 #include "rtql8/simulation/World.h"
+#include "rtql8/geometry/Mesh3DTriangle.h"
 
 #include "rtql8Manipulability/DecomposedSkeleton.h"
 #include "rtql8Manipulability/sampling/Sample.h"
@@ -60,6 +61,7 @@ using namespace rtql8::kinematics;
 using namespace rtql8::dynamics;
 using namespace rtql8::simulation;
 using namespace rtql8::utils;
+using namespace rtql8::geometry;
 
 
 /** SAMPLE CREATION TESTS **/
@@ -187,6 +189,20 @@ int main(int argc, char* argv[])
 	SampleRandomizedTest(error, skel);
 	SampleTest(error, skel);
 	SampleGenerationTest(error, skel);
+
+	Mesh3DTriangle mesh;
+	const std::string objPath(RTQL8MANIPULABILITY_DATA_PATH"objs/wall_1.obj");
+	//const std::string objPath2(RTQL8MANIPULABILITY_DATA_PATH"objs/wall_2.obj");
+	if(!mesh.readMesh(objPath.c_str(), Mesh3D::OBJ))
+	{
+		std::cout << "can not read obj file for climbing wall " << objPath << std::endl;
+		error = true;
+	}
+	/*if(!mesh.readMesh(objPath2.c_str(), Mesh3D::OBJ))
+	{
+		std::cout << "can not read obj file for climbing wall " << objPath << std::endl;
+		error = true;
+	}	*/
 	if(error)
 	{
 		std::cout << "there were some errors" << std::endl;
@@ -195,14 +211,15 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "no errors found" << std::endl;
 	}
+
 	// create a window and link it to the world
-	/*MyWindow window;
+	MyWindow window(mesh);
 	window.setWorld(myWorld);
 
 
 	glutInit(&argc, argv);
 	window.initWindow(640, 480, "Forward Simulation");
-	glutMainLoop();*/
+	glutMainLoop();
 
 	return 0;
 }

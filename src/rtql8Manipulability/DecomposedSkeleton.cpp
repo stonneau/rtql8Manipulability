@@ -1,6 +1,6 @@
 #include "manipulability/ManipulabilityPaths.h"
-#include "rtql8/kinematics/Skeleton.h"
-#include "rtql8/kinematics/BodyNode.h"
+#include "kinematics/Skeleton.h"
+#include "kinematics/BodyNode.h"
 #include "rtql8Manipulability/DecomposedSkeleton.h"
 
 using namespace rtql8::kinematics;

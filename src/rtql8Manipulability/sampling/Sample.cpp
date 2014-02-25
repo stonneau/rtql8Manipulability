@@ -1,8 +1,8 @@
 
 #include "rtql8Manipulability/sampling/Sample.h"
-#include "rtql8/kinematics/BodyNode.h"
-#include "rtql8/kinematics/Joint.h"
-#include "rtql8/kinematics/Dof.h"
+#include "kinematics/BodyNode.h"
+#include "kinematics/Joint.h"
+#include "kinematics/Dof.h"
 
 #include "utils/MatrixDefs.h"
 #include "utils/MatrixDefsInternal.h"

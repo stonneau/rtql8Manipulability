@@ -21,7 +21,7 @@ lib/
 build/*
 
 # temp files
-.*~
+*~
 
 CMakeCache.txt
 CMakeFiles

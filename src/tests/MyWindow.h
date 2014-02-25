@@ -40,21 +40,23 @@
 
 #include "yui/Win3D.h"
 #include "simulation/SimWindow.h"
+#include "rtql8/geometry/Mesh3DTriangle.h"
 
 class MyWindow : public rtql8::simulation::SimWindow
 {
  public:
- MyWindow(): SimWindow() {}
+ MyWindow(rtql8::geometry::Mesh3DTriangle& mesh): SimWindow(), mesh_(mesh) {}
     virtual ~MyWindow() {}
     
     virtual void timeStepping();
     //  virtual void drawSkels();
     //  virtual void displayTimer(int _val);
-    //  virtual void draw();
+    virtual void draw();
     //  virtual void keyboard(unsigned char key, int x, int y);
 
  private:
     Eigen::VectorXd computeDamping(); 
+    rtql8::geometry::Mesh3DTriangle& mesh_; 
 };
 
 #endif

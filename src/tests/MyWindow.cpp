@@ -47,6 +47,13 @@ void MyWindow::timeStepping()
     mWorld->step();
 }
 
+void MyWindow::draw()
+{
+	rtql8::simulation::SimWindow::draw();
+	Eigen::Vector4d color(0.8, 0.4, 0.4, 1);
+	mesh_.draw(color, false, true);
+}
+
 VectorXd MyWindow::computeDamping()
 {
     int nDof = mWorld->getSkeleton(0)->getNumDofs();
