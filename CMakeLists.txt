@@ -8,8 +8,6 @@ set(RTQL8_MANIPULABILITY_ROOT "${PROJECT_SOURCE_DIR}/")
 set(RTQL8_INCLUDE_DIR "default value" CACHE PATH "include folder for RTQL8")
 set(RTQL8_LIBRARY_DIR "default value" CACHE PATH "library folder for RTQL8")
 
-INCLUDE(ThirdParties.cmake)
-
 ###############################################
 # Find important packages
 FIND_PACKAGE(OpenGL REQUIRED)
