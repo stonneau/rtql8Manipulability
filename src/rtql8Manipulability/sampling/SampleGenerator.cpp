@@ -2,6 +2,7 @@
 #include "rtql8Manipulability/sampling/SampleGenerator.h"
 #include "rtql8Manipulability/sampling/SampleGeneratorVisitor_ABC.h"
 #include "rtql8Manipulability/sampling/Sample.h"
+#include "rtql8Manipulability/world/Obstacle.h"
 #include "rtql8Manipulability/DecomposedSkeleton.h"
 #include "kinematics/BodyNode.h"
 #include "kinematics/Joint.h"
@@ -77,6 +78,21 @@ namespace tree
 
 }
 
+namespace
+{
+double ApproximateRadius(BodyNode* limb)
+{
+    Vector3d zero(0,0,0);
+    BodyNode* current = limb;
+    double res =0.;
+    while(current->getNumChildJoints() != 0)
+    {
+        res += (current->getChildNode(0)->evalWorldPos(zero) - current->evalWorldPos(zero)).norm();
+        current = current->getChildNode(0);
+    }
+    return res;
+}
+}
 
 namespace rtql8
 {
@@ -88,7 +104,9 @@ struct PImpl
 	typedef std::map<tree::EntityId, Sample> T_IdMatches;
 	typedef std::map<std::string, T_IdMatches> LLSamples;
 	typedef T_IdMatches::iterator T_IdMatches_IT;
-	typedef T_IdMatches::const_iterator T_IdMatches_CIT;
+    typedef T_IdMatches::const_iterator T_IdMatches_CIT;
+    typedef std::vector<const manip_core::Obstacle*> T_Obstacle;
+    typedef T_Obstacle::const_iterator CIT_Obstacle;
 
 	PImpl()
 	{
@@ -101,11 +119,15 @@ struct PImpl
 		{
 			delete (it->second);
 		}
+        for(T_Obstacle::iterator it = obstacles_.begin(); it!= obstacles_.end(); ++it)
+        {
+            delete (*it);
+        }
 	}
 	
 	void GenerateSample(T_IdMatches& samples, tree::RTree3f * rtree, BodyNode* limb)
 	{
-		Sample sample(limb);
+        Sample sample(limb, true);
 		tree::EntityId id = rtree->insert(sample.position_);
 		T_IdMatches_IT it = samples.find(id);
 		if(it == samples.end())
@@ -113,8 +135,26 @@ struct PImpl
 			samples.insert(std::make_pair(id, sample));
 		}
 	}
+
+    T_Obstacle GetReachableObstacles(BodyNode* limb) const
+    {
+        Vector3d worldPosition(0,0,0);
+        worldPosition = limb->evalWorldPos(worldPosition);
+        double boundaryRadius = ApproximateRadius(limb) * 0.8;
+        T_Obstacle res;
+        for(CIT_Obstacle cit=obstacles_.begin(); cit!=obstacles_.end(); ++cit)
+        {
+            if((*cit)->Distance(worldPosition) < boundaryRadius)
+            {
+                res.push_back(*cit);
+            }
+        }
+        return res;
+    }
+
 	LLSamples allSamples_;
-	T_Trees trees_;
+    T_Trees trees_;
+    T_Obstacle obstacles_;
 };
 } // namespace kinematics
 } //namespace rtql8
@@ -134,6 +174,7 @@ SampleGenerator::~SampleGenerator()
 
 void SampleGenerator::GenerateSamples(BodyNode* limb, int nbSamples)
 {
+    Sample save(limb,false);
 	assert(nbSamples > 0);
 	const std::string name = limb->getName();
 	if(pImpl_->allSamples_.find(name) == pImpl_->allSamples_.end())
@@ -147,6 +188,7 @@ void SampleGenerator::GenerateSamples(BodyNode* limb, int nbSamples)
 			pImpl_->GenerateSample(pImpl_->allSamples_[name], rTree, limb);
 		}
 	}
+    save.LoadIntoLimb(limb);
 }
 
 void SampleGenerator::GenerateSamples(const DecomposedSkeleton& character, int nbSamples)
@@ -165,5 +207,34 @@ void SampleGenerator::Request(BodyNode* limb, SampleGeneratorVisitor_ABC* visito
 	}
 }
 
+#include<iostream>>
+void SampleGenerator::RequestInContact(BodyNode* limb, SampleGeneratorVisitor_ABC* visitor) const
+{
+    const double delta=0.001;
+    Vector3d worldPosition(0,0,0);
+    worldPosition = limb->evalWorldPos(worldPosition);
+    // first retrieve reachable obstacles
+    PImpl::T_Obstacle reachableObstacles = pImpl_->GetReachableObstacles(limb);
+    for(PImpl::T_IdMatches_IT it = pImpl_->allSamples_[limb->getName()].begin(); it != pImpl_->allSamples_[limb->getName()].end(); ++it)
+    {
+        for(PImpl::CIT_Obstacle cit=reachableObstacles.begin(); cit!=reachableObstacles.end(); ++cit)
+        {
+            double distance = (*cit)->Distance(worldPosition + it->second.position_);
+            if(distance < delta)
+            {
+                std::cout << " LIMB " << limb->getName() << std::endl << worldPosition << std::endl;
+                std::cout << " EFFECTOR " << it->second.position_ << std::endl;
+                std::cout << "obstacle close " << (worldPosition + it->second.position_) <<
+                             std::endl << (*cit)->p1_ << std::endl << distance << std::endl;
+                visitor->Visit(limb, it->second);
+                // TODO Maybe do not break out of this when checking normals
+                break;
+            }
+        }
+    }
+}
 
-
+void SampleGenerator::AddObstacle(const manip_core::Obstacle* obstacle)
+{
+    pImpl_->obstacles_.push_back(obstacle);
+}

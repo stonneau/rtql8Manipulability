@@ -4,13 +4,17 @@
 
 #include <memory>
 
+namespace manip_core
+{
+class Obstacle;
+}
+
 namespace rtql8 {
 namespace kinematics {
 class DecomposedSkeleton;
 class Skeleton;
 class BodyNode;
 class SampleGeneratorVisitor_ABC;
-class Filter_ABC;
 struct PImpl;
 
 class SampleGenerator {
@@ -25,12 +29,17 @@ private:
 public:
 	void GenerateSamples(const DecomposedSkeleton& /*character*/, int nbSamples = 1);
 	void GenerateSamples(BodyNode* /*limb*/, int nbSamples = 1);
-	void Request(BodyNode* /*limb*/, SampleGeneratorVisitor_ABC* /*visitor*/) const;
+    void Request(BodyNode* /*limb*/, SampleGeneratorVisitor_ABC* /*visitor*/) const; // goes through all samples
+    void RequestInContact(BodyNode* /*limb*/, SampleGeneratorVisitor_ABC* /*visitor*/) const; // goes through in contact samples
+
+public:
+    void AddObstacle(const manip_core::Obstacle* /*obstacle*/);
 
 private:
-	static SampleGenerator* instance;
-	
-	std::auto_ptr<PImpl> pImpl_;
+    std::auto_ptr<PImpl> pImpl_;
+
+private:
+    static SampleGenerator* instance;
 
 public:
 	static SampleGenerator* GetInstance()

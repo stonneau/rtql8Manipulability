@@ -10,6 +10,8 @@ set(SOURCES
 		sampling/Sample.h sampling/Sample.cpp
 		sampling/SampleGenerator.h sampling/SampleGenerator.cpp
 		sampling/SampleGeneratorVisitor_ABC.h sampling/SampleGeneratorVisitor_ABC.cpp
+		world/WorldParserObj.h world/WorldParserObj.cpp
+		world/Obstacle.h world/Obstacle.cpp
 		${RTQL8_MANIPULABILITY_ROOT}/src/utils/MatrixDefsInternal.h
 		${RTQL8_MANIPULABILITY_ROOT}/src/utils/MatrixDefs.h
 		${RTQL8_MANIPULABILITY_ROOT}/src/utils/MatrixDefs.cpp

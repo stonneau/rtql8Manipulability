@@ -39,9 +39,10 @@
 #include <iostream>
 
 #include "rtql8/kinematics/Skeleton.h"
-#include "rtql8/dynamics/SkeletonDynamics.h"
-#include "rtql8/kinematics/BodyNode.h"
 #include "rtql8/kinematics/FileInfoSkel.hpp"
+#include "rtql8/kinematics/BodyNode.h"
+
+#include "rtql8/dynamics/SkeletonDynamics.h"
 #include "rtql8/simulation/World.h"
 #include "rtql8/geometry/Mesh3DTriangle.h"
 
@@ -49,6 +50,8 @@
 #include "rtql8Manipulability/sampling/Sample.h"
 #include "rtql8Manipulability/sampling/SampleGenerator.h"
 #include "rtql8Manipulability/sampling/SampleGeneratorVisitor_ABC.h"
+#include "rtql8Manipulability/world/Obstacle.h"
+#include "rtql8Manipulability/world/WorldParserObj.h"
 
 #include "rtql8/utils/Paths.h"
 #include "manipulability/ManipulabilityPaths.h"
@@ -62,6 +65,8 @@ using namespace rtql8::dynamics;
 using namespace rtql8::simulation;
 using namespace rtql8::utils;
 using namespace rtql8::geometry;
+
+using namespace manip_core;
 
 
 /** SAMPLE CREATION TESTS **/
@@ -132,12 +137,12 @@ namespace
 {
 	struct DummySampleVisitor: public SampleGeneratorVisitor_ABC
 	{
-		 DummySampleVisitor() : nbCalls_(0){};
-		~DummySampleVisitor(){};
+         DummySampleVisitor() : nbCalls_(0){}
+        ~DummySampleVisitor(){}
 
 		void Visit(BodyNode* limb, Sample& sample) 
-		{
-			std::cout << "limb visited :" <<  limb->getName() << std::endl;
+        {
+            //std::cout << "limb visited :" <<  limb->getName() << std::endl;
 			++ nbCalls_;
 		}
 		int nbCalls_;
@@ -163,11 +168,60 @@ namespace
 }
 /** SAMPLE GENERATION TESTS **/
 
+/** OBSTACLE QUERIES TESTS **/
+namespace
+{
+    struct DummySampleObstacleVisitor: public SampleGeneratorVisitor_ABC
+    {
+         DummySampleObstacleVisitor() : nbCalls_(0), res(0){}
+        ~DummySampleObstacleVisitor(){}
+
+        void Visit(BodyNode* limb, Sample& sample)
+        {
+            res = &sample;
+            ++ nbCalls_;
+        }
+        Sample* res;
+        int nbCalls_;
+    };
+    void ObstacleQueryTest(bool& error, SkeletonDynamics* skel)
+    {
+        WorldParserObj worldParserObj;
+        const std::string objPath(RTQL8MANIPULABILITY_DATA_PATH"tests/objs/triangle.obj");
+        worldParserObj.CreateWorld(objPath);
+        DecomposedSkeleton decomposedSkel(skel);
+        SampleGenerator * generator = SampleGenerator::GetInstance();
+        generator->GenerateSamples(decomposedSkel, 1000);
+
+
+
+        //for(DecomposedSkeleton::CIT_BodyNodePtr cit=decomposedSkel.limbs_.begin(); cit!=decomposedSkel.limbs_.end(); ++cit)
+        //{
+            DecomposedSkeleton::CIT_BodyNodePtr cit=decomposedSkel.limbs_.begin();
+            DummySampleObstacleVisitor visitor;
+            generator->RequestInContact((*cit), &visitor);
+            if(visitor.nbCalls_==0 || visitor.nbCalls_==10000)
+            {
+                error = true;
+                std::cout << "Error in ObstacleQueryTest, more than 0 and less than 1000 visits " << (*cit)->getName() << ", got " << visitor.nbCalls_ << "."  << std::endl;
+            }
+            else
+            {
+                visitor.res->LoadIntoLimb((*cit), true);
+                std::cout << "one visit " <<  visitor.res->position_ << std::endl;
+                std::cout << "one visit " <<  (*cit)->getName() << std::endl;
+            }
+        //}
+
+    }
+}
+/** OBSTACLE QUERIES TESTS **/
+
 int main(int argc, char* argv[])
 {
 	// load a skeleton file
 	FileInfoSkel<SkeletonDynamics> model;
-	model.loadFile(RTQL8MANIPULABILITY_DATA_PATH"/skeletons/fullbody1.skel", SKEL);
+    model.loadFile(RTQL8MANIPULABILITY_DATA_PATH"/tests/skeletons/fullbody1.skel", SKEL);
 	SkeletonDynamics *skel = (SkeletonDynamics*)model.getSkel();
 	skel->setJointLimitState(false);
 
@@ -180,18 +234,19 @@ int main(int argc, char* argv[])
 	int nDof =  skel->getNumDofs();
 	VectorXd initPose(nDof);
 	for (int i = 0; i < nDof; i++)
-	initPose[i] = random(-0.5, 0.5);
-	skel->setPose(initPose, true, false);
-	myWorld->addSkeleton(skel);
+    initPose[i] = random(-0.5, 0.5);
+   // skel->setPose(initPose, true, false);
+    myWorld->addSkeleton(skel);
 
 	bool error = false;
 
-	SampleRandomizedTest(error, skel);
+    /*SampleRandomizedTest(error, skel);
 	SampleTest(error, skel);
-	SampleGenerationTest(error, skel);
+    SampleGenerationTest(error, skel);*/
+    ObstacleQueryTest(error, skel);
 
 	Mesh3DTriangle mesh;
-	const std::string objPath(RTQL8MANIPULABILITY_DATA_PATH"objs/wall_1.obj");
+    const std::string objPath(RTQL8MANIPULABILITY_DATA_PATH"tests/objs/triangle.obj");
 	//const std::string objPath2(RTQL8MANIPULABILITY_DATA_PATH"objs/wall_2.obj");
 	if(!mesh.readMesh(objPath.c_str(), Mesh3D::OBJ))
 	{
@@ -218,7 +273,7 @@ int main(int argc, char* argv[])
 
 
 	glutInit(&argc, argv);
-	window.initWindow(640, 480, "Forward Simulation");
+    window.initWindow(1280, 768, "Manipulability tests");
 	glutMainLoop();
 
 	return 0;
