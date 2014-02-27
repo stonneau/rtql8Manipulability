@@ -12,9 +12,10 @@ using namespace Eigen;
 
 #include <iostream>
 
+#include "kinematics/Skeleton.h"
 namespace
 {
-    Eigen::Vector3d ComputeEffectorPositioon(BodyNode* node)
+    Eigen::Vector3d ComputeEffectorPosition(BodyNode* node)
     {
         // get effector
         BodyNode* effector = node;
@@ -23,7 +24,7 @@ namespace
 			effector = effector->getChildNode(0);
 		}
         Vector3 zero(0,0,0);
-        return effector->evalWorldPos(zero) - node->evalWorldPos(zero);
+        return Eigen::matrix4TimesVect3(node->getWorldInvTransform(), effector->evalWorldPos(zero));
 	}
 
 	void CollectAnglesRec(BodyNode* node, Sample::T_Angles& angles, bool randomize)
@@ -70,7 +71,7 @@ namespace
 
 Sample::Sample(BodyNode* limbRoot, bool randomize)
 	: angles_(CollectAngles(limbRoot, randomize))
-    , position_(ComputeEffectorPositioon(limbRoot))
+    , position_(ComputeEffectorPosition(limbRoot))
 {
 	// Jacobian computation
 	MatrixXd jacobian = limbRoot->getJacobianLinear();

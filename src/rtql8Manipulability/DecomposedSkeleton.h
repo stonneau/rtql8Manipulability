@@ -20,7 +20,7 @@ public:
 	~DecomposedSkeleton();
 
 public:
-    const Skeleton* skeleton_;
+    Skeleton* skeleton_;
 	const T_BodyNodePtr limbs_;
 
 }; 

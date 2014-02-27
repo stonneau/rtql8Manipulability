@@ -81,31 +81,34 @@ namespace
 			std::cout << "\t limb :" << (*cit)->getName() << " " << std::endl;
 		}
 
-		Sample sample(decomposedSkel.limbs_[0]);
-  
-		// messing up with the dofs values...
+        // messing up with the dofs values...
 		int nDof =  skel->getNumDofs();
-		VectorXd initPose(nDof);
+        VectorXd savePose(nDof);
+        VectorXd initPose(nDof);
 		for (int i = 0; i < nDof; i++)
-			initPose[i] = random(-0.5, 0.5);
-		skel->setPose(initPose, false, false);
-		decomposedSkel.limbs_[0]->updateTransform();
-
-		// reloading sample values into skeleton
-		sample.LoadIntoLimb(decomposedSkel.limbs_[0], true);
-		decomposedSkel.limbs_[0]->updateTransform();
+        {
+            savePose[i] = skel->getDof(i)->getValue();
+            initPose[i] = random(-0.5, 0.5);
+        }
+        skel->setPose(savePose, true, false);
+        Sample sample(decomposedSkel.limbs_[0]);
+        skel->setPose(initPose, true, false);
+        // reloading sample values into skeleton
+        sample.LoadIntoLimb(decomposedSkel.limbs_[0], true);
 		Sample sample2(decomposedSkel.limbs_[0]);
 		// if loading worked end effector position of limb must be the same
-		if( sample2.position_ != sample.position_)
+        if((sample2.position_- sample.position_).norm() > 0.001)
 		{
 			error = true;
-			std::cout << "Loading of sample into limb failed, expected and actual positions differ: " << sample2.position_ << " "  << sample.position_ << std::endl;
-		}
+            std::cout << "Loading of sample into limb failed, expected and actual positions differ: " << sample2.position_ << " "  << sample.position_ << std::endl;
+        }
+        skel->setPose(savePose, true, false);
 	}
 
 	void SampleRandomizedTest(bool& error, SkeletonDynamics* skel)
 	{
 		DecomposedSkeleton decomposedSkel(skel);
+        Sample save(decomposedSkel.limbs_[0]);
 		for(int i = 0; i< 10000; ++i)
 		{
 			BodyNode* limb = decomposedSkel.limbs_[0];
@@ -128,6 +131,7 @@ namespace
 				}
 			}
 		}
+        save.LoadIntoLimb(decomposedSkel.limbs_[0]);
 	}
 }
 /** SAMPLE CREATION TESTS **/
@@ -155,6 +159,7 @@ namespace
 		generator->GenerateSamples(decomposedSkel, 10);
 		for(DecomposedSkeleton::CIT_BodyNodePtr cit=decomposedSkel.limbs_.begin(); cit!=decomposedSkel.limbs_.end(); ++cit)
 		{
+            Sample save(*cit);
 			DummySampleVisitor visitor;
 			generator->Request((*cit), &visitor);
 			if(visitor.nbCalls_ != 10)
@@ -162,6 +167,7 @@ namespace
 				error = true;
 				std::cout << "Error in SampleGenerationTest, expected 10 visits for limb " << (*cit)->getName() << ", got " << visitor.nbCalls_ << "."  << std::endl;
 			}
+            save.LoadIntoLimb(*cit);
 		}
 		
 	}
@@ -178,7 +184,8 @@ namespace
 
         void Visit(BodyNode* limb, Sample& sample)
         {
-            res = &sample;
+            res = &sample;            
+            std::cout << "one visit " <<  res->position_ << std::endl;
             ++ nbCalls_;
         }
         Sample* res;
@@ -191,12 +198,12 @@ namespace
         worldParserObj.CreateWorld(objPath);
         DecomposedSkeleton decomposedSkel(skel);
         SampleGenerator * generator = SampleGenerator::GetInstance();
-        generator->GenerateSamples(decomposedSkel, 1000);
+        generator->GenerateSamples(decomposedSkel, 100000);
 
 
 
-        //for(DecomposedSkeleton::CIT_BodyNodePtr cit=decomposedSkel.limbs_.begin(); cit!=decomposedSkel.limbs_.end(); ++cit)
-        //{
+        for(DecomposedSkeleton::CIT_BodyNodePtr cit=decomposedSkel.limbs_.begin(); cit!=decomposedSkel.limbs_.end(); ++cit)
+        {
             DecomposedSkeleton::CIT_BodyNodePtr cit=decomposedSkel.limbs_.begin();
             DummySampleObstacleVisitor visitor;
             generator->RequestInContact((*cit), &visitor);
@@ -211,8 +218,7 @@ namespace
                 std::cout << "one visit " <<  visitor.res->position_ << std::endl;
                 std::cout << "one visit " <<  (*cit)->getName() << std::endl;
             }
-        //}
-
+        }
     }
 }
 /** OBSTACLE QUERIES TESTS **/
@@ -235,29 +241,22 @@ int main(int argc, char* argv[])
 	VectorXd initPose(nDof);
 	for (int i = 0; i < nDof; i++)
     initPose[i] = random(-0.5, 0.5);
-   // skel->setPose(initPose, true, false);
     myWorld->addSkeleton(skel);
 
 	bool error = false;
 
-    /*SampleRandomizedTest(error, skel);
-	SampleTest(error, skel);
-    SampleGenerationTest(error, skel);*/
+    SampleRandomizedTest(error, skel);
+    SampleTest(error, skel);
+    SampleGenerationTest(error, skel);
     ObstacleQueryTest(error, skel);
 
 	Mesh3DTriangle mesh;
     const std::string objPath(RTQL8MANIPULABILITY_DATA_PATH"tests/objs/triangle.obj");
-	//const std::string objPath2(RTQL8MANIPULABILITY_DATA_PATH"objs/wall_2.obj");
 	if(!mesh.readMesh(objPath.c_str(), Mesh3D::OBJ))
 	{
 		std::cout << "can not read obj file for climbing wall " << objPath << std::endl;
 		error = true;
-	}
-	/*if(!mesh.readMesh(objPath2.c_str(), Mesh3D::OBJ))
-	{
-		std::cout << "can not read obj file for climbing wall " << objPath << std::endl;
-		error = true;
-	}	*/
+    }
 	if(error)
 	{
 		std::cout << "there were some errors" << std::endl;

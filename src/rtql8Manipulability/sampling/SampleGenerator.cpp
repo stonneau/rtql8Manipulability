@@ -207,25 +207,22 @@ void SampleGenerator::Request(BodyNode* limb, SampleGeneratorVisitor_ABC* visito
 	}
 }
 
-#include<iostream>>
+#include <iostream>
 void SampleGenerator::RequestInContact(BodyNode* limb, SampleGeneratorVisitor_ABC* visitor) const
 {
-    const double delta=0.001;
-    Vector3d worldPosition(0,0,0);
-    worldPosition = limb->evalWorldPos(worldPosition);
+    const double delta=0.01;
+    const MatrixX4d& worldTransform = limb->getWorldTransform();
     // first retrieve reachable obstacles
     PImpl::T_Obstacle reachableObstacles = pImpl_->GetReachableObstacles(limb);
     for(PImpl::T_IdMatches_IT it = pImpl_->allSamples_[limb->getName()].begin(); it != pImpl_->allSamples_[limb->getName()].end(); ++it)
     {
+        Vector3d worldPosition = Eigen::matrix4TimesVect3(worldTransform, it->second.position_);
         for(PImpl::CIT_Obstacle cit=reachableObstacles.begin(); cit!=reachableObstacles.end(); ++cit)
         {
-            double distance = (*cit)->Distance(worldPosition + it->second.position_);
+            double distance = (*cit)->Distance(worldPosition);
             if(distance < delta)
             {
-                std::cout << " LIMB " << limb->getName() << std::endl << worldPosition << std::endl;
-                std::cout << " EFFECTOR " << it->second.position_ << std::endl;
-                std::cout << "obstacle close " << (worldPosition + it->second.position_) <<
-                             std::endl << (*cit)->p1_ << std::endl << distance << std::endl;
+                std::cout << " CONTACT " << (*cit)->p1_ << std::endl;
                 visitor->Visit(limb, it->second);
                 // TODO Maybe do not break out of this when checking normals
                 break;

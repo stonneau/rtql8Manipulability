@@ -23,6 +23,7 @@ public:
 	// Minimal distance between the plan described by the obstacle and a point, that is, the distance btw point and its orthonormal projection on the plan
 	double Distance(const Eigen::Vector3d& /*point*/, Eigen::Vector3d& /*getCoordinates*/) const; // get coordinates of the projection
     double Distance(const Eigen::Vector3d& /*point*/) const;
+    double DistanceToObstacle(const Eigen::Vector3d& /*point*/) const;
     bool IsAbove(const Eigen::Vector3d& /*point*/) const; // true if a point is above the obstacle, considering the normal
 
 	const Eigen::Vector3d  ProjectUp(const Eigen::Vector3d& /*point*/) const; // projects a points onto obstacle plan and rises it up a little
