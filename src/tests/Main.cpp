@@ -109,7 +109,7 @@ namespace
 	{
 		DecomposedSkeleton decomposedSkel(skel);
         Sample save(decomposedSkel.limbs_[0]);
-		for(int i = 0; i< 10000; ++i)
+        for(int i = 0; i< 1000; ++i)
 		{
 			BodyNode* limb = decomposedSkel.limbs_[0];
 			Sample sample(limb, true);
@@ -156,16 +156,16 @@ namespace
 	{
 		DecomposedSkeleton decomposedSkel(skel);
 		SampleGenerator * generator = SampleGenerator::GetInstance();
-		generator->GenerateSamples(decomposedSkel, 10);
+        generator->GenerateSamples(decomposedSkel, 100000);
 		for(DecomposedSkeleton::CIT_BodyNodePtr cit=decomposedSkel.limbs_.begin(); cit!=decomposedSkel.limbs_.end(); ++cit)
 		{
             Sample save(*cit);
 			DummySampleVisitor visitor;
 			generator->Request((*cit), &visitor);
-			if(visitor.nbCalls_ != 10)
+            if(visitor.nbCalls_ != 100000)
 			{
 				error = true;
-				std::cout << "Error in SampleGenerationTest, expected 10 visits for limb " << (*cit)->getName() << ", got " << visitor.nbCalls_ << "."  << std::endl;
+                std::cout << "Error in SampleGenerationTest, expected 100000 visits for limb " << (*cit)->getName() << ", got " << visitor.nbCalls_ << "."  << std::endl;
 			}
             save.LoadIntoLimb(*cit);
 		}
@@ -173,6 +173,31 @@ namespace
 	}
 }
 /** SAMPLE GENERATION TESTS **/
+
+/** OBSTACLE TESTS **/
+namespace
+{
+    void TestDistanceObstacle(bool& error)
+    {
+        Vector3d p1(0,0,0);
+        Vector3d p2(1,0,0);
+        Vector3d p3(1,1,0);
+        Obstacle obs(p1, p2, p3);
+        if(obs.Distance(p1) != 0 || obs.Distance(p2) != 0 || obs.Distance(p2) != 0)
+        {
+            error = true;
+            std::cout << "Error in TestDistanceObstacle: points of the triangle have a non null distance to triangle" << std::endl;
+        }
+        Vector3d p4(1,1,1);
+        if(obs.Distance(p4) != 1)
+        {
+            error = true;
+            std::cout << "Error in TestDistanceObstacle: point (1,1,1) should have a distance of one to triangle" << std::endl;
+        }
+    }
+}
+/** OBSTACLE TESTS **/
+
 
 /** OBSTACLE QUERIES TESTS **/
 namespace
@@ -182,10 +207,9 @@ namespace
          DummySampleObstacleVisitor() : nbCalls_(0), res(0){}
         ~DummySampleObstacleVisitor(){}
 
-        void Visit(BodyNode* limb, Sample& sample)
+        void Visit(BodyNode* /*limb*/, Sample& sample)
         {
-            res = &sample;            
-            std::cout << "one visit " <<  res->position_ << std::endl;
+            res = &sample;
             ++ nbCalls_;
         }
         Sample* res;
@@ -201,23 +225,19 @@ namespace
         generator->GenerateSamples(decomposedSkel, 100000);
 
 
-
-        for(DecomposedSkeleton::CIT_BodyNodePtr cit=decomposedSkel.limbs_.begin(); cit!=decomposedSkel.limbs_.end(); ++cit)
+        BodyNode* leg=decomposedSkel.limbs_[0];
+        DummySampleObstacleVisitor visitor;
+        generator->RequestInContact(leg, &visitor, 0.05);
+        if(visitor.nbCalls_==0 || visitor.nbCalls_==100000)
         {
-            DecomposedSkeleton::CIT_BodyNodePtr cit=decomposedSkel.limbs_.begin();
-            DummySampleObstacleVisitor visitor;
-            generator->RequestInContact((*cit), &visitor);
-            if(visitor.nbCalls_==0 || visitor.nbCalls_==10000)
-            {
-                error = true;
-                std::cout << "Error in ObstacleQueryTest, more than 0 and less than 1000 visits " << (*cit)->getName() << ", got " << visitor.nbCalls_ << "."  << std::endl;
-            }
-            else
-            {
-                visitor.res->LoadIntoLimb((*cit), true);
-                std::cout << "one visit " <<  visitor.res->position_ << std::endl;
-                std::cout << "one visit " <<  (*cit)->getName() << std::endl;
-            }
+            error = true;
+            std::cout << "Error in ObstacleQueryTest, more than 0 and less than 1000000 visits " << leg->getName() << ", got " << visitor.nbCalls_ << "."  << std::endl;
+        }
+        else
+        {
+            visitor.res->LoadIntoLimb(leg, true);
+            std::cout << "one visit " <<  visitor.res->position_ << std::endl;
+            std::cout << "one visit " <<  leg->getName() << std::endl;
         }
     }
 }
@@ -248,6 +268,7 @@ int main(int argc, char* argv[])
     SampleRandomizedTest(error, skel);
     SampleTest(error, skel);
     SampleGenerationTest(error, skel);
+    TestDistanceObstacle(error);
     ObstacleQueryTest(error, skel);
 
 	Mesh3DTriangle mesh;
@@ -264,10 +285,12 @@ int main(int argc, char* argv[])
 	else
 	{
 		std::cout << "no errors found" << std::endl;
-	}
+    }
 
 	// create a window and link it to the world
-	MyWindow window(mesh);
+    DecomposedSkeleton decomposedSkel(skel);
+    MyWindow window(mesh, decomposedSkel.limbs_[0]);
+    SampleGenerator::GetInstance()->Request(decomposedSkel.limbs_[0], &window);
 	window.setWorld(myWorld);
 
 

@@ -54,6 +54,63 @@ void MyWindow::draw()
 	mesh_.draw(color, false, true);
 }
 
+
+#include <iostream>
+void MyWindow::keyboard(unsigned char key, int x, int y)
+{
+    switch(key){
+    case '+': // use space key to play or stop the motion
+        {
+            currentIndex_ ++;
+            if (currentIndex_ >= samples_.size()) currentIndex_--;
+            samples_[currentIndex_]->LoadIntoLimb(limb_,true);
+            break;
+        }
+    case '-': // use space key to play or stop the motion
+        {
+            if (currentIndex_ >0) currentIndex_--;
+            samples_[currentIndex_]->LoadIntoLimb(limb_,true);
+            break;
+        }
+    case ' ': // use space key to play or stop the motion
+        mSimulating = !mSimulating;
+        if(mSimulating) {
+            mPlay = false;
+            glutTimerFunc( mDisplayTimeout, refreshTimer, 0);
+        }
+        break;
+    case 'p': // playBack
+        mPlay = !mPlay;
+        if (mPlay) {
+            mSimulating = false;
+            glutTimerFunc( mDisplayTimeout, refreshTimer, 0);
+        }
+        break;
+    case '[': // step backward
+        if (!mSimulating) {
+            mPlayFrame--;
+            if(mPlayFrame < 0)
+                mPlayFrame = 0;
+            glutPostRedisplay();
+        }
+        break;
+    case ']': // step forwardward
+        if (!mSimulating) {
+            mPlayFrame++;
+            if(mPlayFrame >= mBakedStates.size())
+                mPlayFrame = 0;
+            glutPostRedisplay();
+        }
+        break;
+    case 'v': // show or hide markers
+        mShowMarkers = !mShowMarkers;
+        break;
+    default:
+        Win3D::keyboard(key,x,y);
+    }
+    glutPostRedisplay();
+}
+
 VectorXd MyWindow::computeDamping()
 {
     int nDof = mWorld->getSkeleton(0)->getNumDofs();

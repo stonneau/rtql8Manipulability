@@ -30,7 +30,7 @@ public:
 	void GenerateSamples(const DecomposedSkeleton& /*character*/, int nbSamples = 1);
 	void GenerateSamples(BodyNode* /*limb*/, int nbSamples = 1);
     void Request(BodyNode* /*limb*/, SampleGeneratorVisitor_ABC* /*visitor*/) const; // goes through all samples
-    void RequestInContact(BodyNode* /*limb*/, SampleGeneratorVisitor_ABC* /*visitor*/) const; // goes through in contact samples
+    void RequestInContact(BodyNode* /*limb*/, SampleGeneratorVisitor_ABC* /*visitor*/, double treshold =0.01) const; // goes through in contact samples
 
 public:
     void AddObstacle(const manip_core::Obstacle* /*obstacle*/);

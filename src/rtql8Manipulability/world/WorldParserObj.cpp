@@ -102,13 +102,13 @@ void WorldParserObj::CreateWorld(const std::string& filename)
 			if(line.find("v ") == 0)
 			{
 				char x[255],y[255],z[255];
-				sscanf(line.c_str(),"v %s %s %s",x,z,y);
+                sscanf(line.c_str(),"v %s %s %s",x,y,z);
                 points_.push_back(Vector3d(strtod (x, NULL), strtod(y, NULL), strtod(z, NULL)));
 			}
 			if(line.find("vn ") == 0)
 			{
 				char x[255],y[255],z[255];
-				sscanf(line.c_str(),"vn %s %s %s",x,z,y);
+                sscanf(line.c_str(),"vn %s %s %s",x,y,z);
                 normals_.push_back(Vector3d(strtod (x, NULL), strtod(y, NULL), strtod(z, NULL)));
 			}
 			if(line.find("f ") == 0)

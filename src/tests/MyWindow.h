@@ -41,22 +41,44 @@
 #include "yui/Win3D.h"
 #include "simulation/SimWindow.h"
 #include "rtql8/geometry/Mesh3DTriangle.h"
+#include "rtql8/kinematics/Skeleton.h"
+#include "rtql8/kinematics/BodyNode.h"
+#include "rtql8Manipulability/sampling/Sample.h"
+#include "rtql8Manipulability/sampling/SampleGeneratorVisitor_ABC.h"
 
-class MyWindow : public rtql8::simulation::SimWindow
+#include <vector>
+
+class MyWindow : public rtql8::simulation::SimWindow, public rtql8::kinematics::SampleGeneratorVisitor_ABC
 {
  public:
- MyWindow(rtql8::geometry::Mesh3DTriangle& mesh): SimWindow(), mesh_(mesh) {}
+ MyWindow(rtql8::geometry::Mesh3DTriangle& mesh, rtql8::kinematics::BodyNode* limb)
+     : SimWindow()
+     , mesh_(mesh)
+     , limb_(limb)
+     , currentIndex_(0)
+    {}
     virtual ~MyWindow() {}
-    
+
+    virtual void keyboard(unsigned char key, int x, int y);
     virtual void timeStepping();
     //  virtual void drawSkels();
     //  virtual void displayTimer(int _val);
     virtual void draw();
     //  virtual void keyboard(unsigned char key, int x, int y);
+    virtual void Visit(rtql8::kinematics::BodyNode* limb, rtql8::kinematics::Sample& sample)
+    {
+        if(limb->getName() == limb_->getName())
+        {
+            samples_.push_back(&sample);
+        }
+    }
 
  private:
     Eigen::VectorXd computeDamping(); 
     rtql8::geometry::Mesh3DTriangle& mesh_; 
+    std::vector<const rtql8::kinematics::Sample*> samples_;
+    rtql8::kinematics::BodyNode* limb_;
+    int currentIndex_;
 };
 
 #endif

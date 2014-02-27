@@ -75,7 +75,6 @@ namespace tree
 	};
 
 	typedef RegularTree RTree3f;
-
 }
 
 namespace
@@ -87,13 +86,14 @@ double ApproximateRadius(BodyNode* limb)
     double res =0.;
     while(current->getNumChildJoints() != 0)
     {
-        res += (current->getChildNode(0)->evalWorldPos(zero) - current->evalWorldPos(zero)).norm();
+        res += Eigen::matrix4TimesVect3(current->getWorldInvTransform(), current->getChildNode(0)->evalWorldPos(zero)).norm();
         current = current->getChildNode(0);
     }
     return res;
 }
 }
 
+#include <iostream>
 namespace rtql8
 {
 namespace kinematics
@@ -131,7 +131,7 @@ struct PImpl
 		tree::EntityId id = rtree->insert(sample.position_);
 		T_IdMatches_IT it = samples.find(id);
 		if(it == samples.end())
-		{
+        {
 			samples.insert(std::make_pair(id, sample));
 		}
 	}
@@ -140,7 +140,7 @@ struct PImpl
     {
         Vector3d worldPosition(0,0,0);
         worldPosition = limb->evalWorldPos(worldPosition);
-        double boundaryRadius = ApproximateRadius(limb) * 0.8;
+        double boundaryRadius = ApproximateRadius(limb);
         T_Obstacle res;
         for(CIT_Obstacle cit=obstacles_.begin(); cit!=obstacles_.end(); ++cit)
         {
@@ -207,10 +207,8 @@ void SampleGenerator::Request(BodyNode* limb, SampleGeneratorVisitor_ABC* visito
 	}
 }
 
-#include <iostream>
-void SampleGenerator::RequestInContact(BodyNode* limb, SampleGeneratorVisitor_ABC* visitor) const
+void SampleGenerator::RequestInContact(BodyNode* limb, SampleGeneratorVisitor_ABC* visitor, double treshold) const
 {
-    const double delta=0.01;
     const MatrixX4d& worldTransform = limb->getWorldTransform();
     // first retrieve reachable obstacles
     PImpl::T_Obstacle reachableObstacles = pImpl_->GetReachableObstacles(limb);
@@ -220,9 +218,8 @@ void SampleGenerator::RequestInContact(BodyNode* limb, SampleGeneratorVisitor_AB
         for(PImpl::CIT_Obstacle cit=reachableObstacles.begin(); cit!=reachableObstacles.end(); ++cit)
         {
             double distance = (*cit)->Distance(worldPosition);
-            if(distance < delta)
+            if(distance < treshold)
             {
-                std::cout << " CONTACT " << (*cit)->p1_ << std::endl;
                 visitor->Visit(limb, it->second);
                 // TODO Maybe do not break out of this when checking normals
                 break;
